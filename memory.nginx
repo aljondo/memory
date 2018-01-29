@@ -2,10 +2,10 @@ server {
 	listen 80;
 	listen [::]:80;
 
-	server_name memory.ironbeard.com;
+	server_name memory.ryanscapstone.site;
 
 	location / {
-		proxy_pass http://localhost:5100;
+		proxy_pass http:/50.116.44.225:5100;
 		#try_files $uri $uri/ =404;
 	}
 }
