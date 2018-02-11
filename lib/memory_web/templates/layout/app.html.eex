@@ -9,6 +9,7 @@
 
     <title>Hello Memory!</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <script type="text/javascript">window.userToken="TODO";</script>
   </head>
 
   <body>
