@@ -11,8 +11,9 @@ export default class Tile extends React.Component {
     this.props.clickHandler(this.props.boardId);
   }
   render() {
-    const { hidden, letter, className } = this.props;
-    var displayed = hidden ? "?" : letter;
+    const { isCompleted, isGuess, letter } = this.props;
+    const displayed = (isGuess || isCompleted) ? letter : "?";
+    const className = isCompleted ? "completed" : "";
     return (
       <button
         className={className}

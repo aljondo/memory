@@ -3,137 +3,123 @@ import ReactDOM from 'react-dom';
 import Tile from './Tile';
 //import { Button } from 'reactstrap';
 
-export default function run_game(root) {
-  ReactDOM.render(<Game side={0}/>, root);
+export default function run_game(root, channel) {
+  ReactDOM.render(<Game channel={channel} />, root);
 }
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
-    const letters = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2', 'G1', 'G2', 'H1', 'H2'];
-    let j, x, i;
-    for (i = letters.length - 1; i > 0; i--) {
-      j = Math.floor(Math.random() * (i + 1));
-      x = letters[i];
-      letters[i] = letters[j];
-      letters[j] = x;
+    this.channel = props.channel;
+    console.log("channel")
+    console.log(this.channel)
+    this.state = {
+      clickCount: 0,
+      completed: [],
+      guesses: [],
+      timeout: false
     }
-    const boardDict = {};
-    for(var l in letters) {
-      const letterObj = {};
-      letterObj.hidden = true;
-      letterObj.completed = false;
-      boardDict[letters[l]] = letterObj;
-    }
+
+    this.channel.join()
+        .receive("ok", this.gotView.bind(this))
+        .receive("error", resp => { console.log("Unable to join", resp) });
+
     this.clickHandler = this.clickHandler.bind(this)
     this.resetGame = this.resetGame.bind(this);
-    this.state = { 
-      boardDict,
-      letters,
-      clickCount: 0,
-      currentGuess: "",
-      timeOut: false
-    };
   }
 
-  clickHandler(letter) { 
-    console.log("handling clicks")
-    if(!this.state.timeOut) {
-      let clickCount = this.state.clickCount;
-      clickCount++;
-      const boardDict = this.state.boardDict;
-      if(this.state.currentGuess === "") {
-        boardDict[letter].hidden = false;
-        this.setState({currentGuess: letter, clickCount})
-      }
-      else {
-        if(letter.charAt(0) === this.state.currentGuess.charAt(0)) {
-          boardDict[letter].hidden = false;
-          boardDict[letter].completed = true;
-          boardDict[this.state.currentGuess].hidden = false;
-          boardDict[this.state.currentGuess].completed = true;
-          this.setState({boardDict, clickCount, currentGuess: ""});
-        }
-        else {
-          console.log("else else")
-          boardDict[letter].hidden = false;
-          boardDict[this.state.currentGuess].hidden = false;
-
-          // setTimeout(this.hideLetters(this.stateCurrentGuess, letter), 1000);
-          const self = this;
-          const l1 = this.state.currentGuess;
-          setTimeout(function() {
-            console.log(self.state.currentGuess)
-            self.hideLetters(l1, letter)
-          }, 1000);
-          console.log("second setState")
-          this.setState({boardDict, clickCount, currentGuess: "", timeOut: true});
-        }
-      }
+  gotView(view) {
+    console.log("GOT VIEW")
+    console.log(view.game)
+    //set timeout
+    if(view.game.timeout) {
+      //setTimeout(function() {
+        //console.log("TIME")
+      //}, 1000);
+      setTimeout(self.unTimeout, 1000)
+      setTimeout(() => {
+        this.channel.push("clear")
+          .receive("ok", this.gotView.bind(this));
+      }, 1000)
     }
+    console.log("timing out")
+    this.setState(view.game);
   }
 
-  hideLetters(l1, l2) {
-    console.log("hide letters")
-    console.log(l1)
-    console.log(l2)
-    const boardDict = this.state.boardDict;
-    boardDict[l1].hidden = true;
-    boardDict[l2].hidden = true;
-    this.setState({boardDict, timeOut: false});
+  clickHandler(letter) {
+    console.log("CLICKED")
+    console.log(letter)
+    console.log(this)
+    console.log(this.channel)
+    if(!this.state.timeout) {
+      this.channel.push("guess", { letter: letter })
+        .receive("ok", this.gotView.bind(this));
+    }
+        //.receive("error", resp => { console.log("somethings going wrong af", resp) });
+  }
+
+  unTimeout() {
+    console.log("TIME")
+    this.setState({ timeout: false });
   }
 
   resetGame() {
-    console.log("is this fucking resetting")
-    const letters = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'D1', 'D2', 'E1', 'E2', 'F1', 'F2', 'G1', 'G2', 'H1', 'H2'];
-    let j, x, i;
-    for (i = letters.length - 1; i > 0; i--) {
-      j = Math.floor(Math.random() * (i + 1));
-      x = letters[i];
-      letters[i] = letters[j];
-      letters[j] = x;
+    if(!this.state.timeout) {
+      this.channel.push("rest")
+          .receive("ok", this.gotView.bind(this));
     }
-    const boardDict = {};
-    for(var l in letters) {
-      const letterObj = {};
-      letterObj.hidden = true;
-      letterObj.completed = false;
-      boardDict[letters[l]] = letterObj;
-    }
-    this.setState({ 
-      boardDict,
-      letters,
-      clickCount: 0,
-      currentGuess: "",
-      timeOut: false
-    });
   }
 
   render() {
     var click = this.clickHandler;
-    var tileHolder = [];
-    //group letters as 4
-    tileHolder.push(this.state.letters.slice(0, 4))
-    tileHolder.push(this.state.letters.slice(4, 8))
-    tileHolder.push(this.state.letters.slice(8, 12))
-    tileHolder.push(this.state.letters.slice(12, 16))
+    var tileHolder = [
+      [0, 1, 2, 3],
+      [4, 5, 6, 7],
+      [8, 9, 10, 11],
+      [12, 13, 14, 15],
+    ];
 
     return (
       <div>
         {tileHolder.map(function(tiles, index) {
           return (
             <div key={"row " + index}>
-              {tiles.map(function(letter, index) {
-                const className = this.state.boardDict[letter].completed ? "completed" : "";
+              {tiles.map(function(tileId) {
+                //need to find if this letter is in guesses or completed
+                //const className = this.state.boardDict[letter].completed ? "completed" : "";
+                //const className = "pls";
+
+                let isGuess = false;
+                let isCompleted = false;
+                let letter;
+                const guesses = this.state.guesses;
+                const completed = this.state.completed;
+
+                console.log(this.state.completed)
+
+                const guessedElement = guesses.find(function(letter) { return letter.id === tileId; });
+                const completedElement = completed.find(function(letter) { return letter.id === tileId; });
+
+                if(guessedElement) {
+                  isGuess = true;
+                  letter = guessedElement.letter;
+                }
+
+                if(completedElement) {
+                  isCompleted = true;
+                  letter = completedElement.letter;
+                }
+
+                //is it hidden?
                 return (
                   <Tile 
-                    boardId={letter}
+                    boardId={tileId}
                     clickHandler={click}
-                    key={index}
-                    letter={letter.charAt(0)}
-                    hidden={this.state.boardDict[letter].hidden}
-                    className={className}
-                    >{letter}
+                    key={tileId}
+                    letter={letter}
+                    isCompleted={isCompleted}
+                    isGuess={isGuess}
+                    >
                   </Tile>
                 );
               }, this)}

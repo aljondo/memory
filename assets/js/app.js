@@ -18,6 +18,8 @@ import socket from "./socket";
 import run_game from "./Game";
 
 function form_init() {
+  console.log("form_init bitches")
+  //not super feelin this rn
   let channel = socket.channel("games:demo", {});
   channel.join()
          .receive("ok", resp => { console.log("Joined successfully", resp) })
@@ -31,13 +33,15 @@ function form_init() {
   });
 }
 
+function gotView(view) {
+  console.log("we in")
+}
+
 function start() {
   let root = document.getElementById('root');
   if (root) {
-    let channel = socket.channel("games:" + window.gameName, {});
-    channel.join()
-    	.receive("ok", resp => { console.log("Joined successfully", resp) })
-    	.receive("error", resp => { console.log("Unable to join", resp) });
+    //let channel = socket.channel("games:" + window.gameName, {}) ill do that later
+    let channel = socket.channel("games:demo", {});
     run_game(root, channel)
   }
 
