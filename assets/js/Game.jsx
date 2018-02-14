@@ -47,10 +47,6 @@ class Game extends React.Component {
   }
 
   clickHandler(letter) {
-    console.log("CLICKED")
-    console.log(letter)
-    console.log(this)
-    console.log(this.channel)
     if(!this.state.timeout) {
       this.channel.push("guess", { letter: letter })
         .receive("ok", this.gotView.bind(this));
@@ -65,7 +61,7 @@ class Game extends React.Component {
 
   resetGame() {
     if(!this.state.timeout) {
-      this.channel.push("rest")
+      this.channel.push("reset")
           .receive("ok", this.gotView.bind(this));
     }
   }
@@ -94,8 +90,6 @@ class Game extends React.Component {
                 let letter;
                 const guesses = this.state.guesses;
                 const completed = this.state.completed;
-
-                console.log(this.state.completed)
 
                 const guessedElement = guesses.find(function(letter) { return letter.id === tileId; });
                 const completedElement = completed.find(function(letter) { return letter.id === tileId; });

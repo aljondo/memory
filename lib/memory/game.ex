@@ -1,10 +1,8 @@
 defmodule Memory.Game do
 	def new do
-		letters = ["A1", "A2", "B1", "B2", "C1", "C2", "D1", "D2", "E1", "E2", "F1", "F2", "G1", "G2", "H1", "H2"]
+		letters = ["A", "A", "B", "B", "C", "C", "D", "D", "E", "E", "F", "F", "G", "G", "H", "H"]
 		|> Enum.shuffle
 		boardArray = get_board(letters, [], 0)
-		IO.puts "new game"
-		#IO.inspect boardArray
 		%{
 			letters: letters,
 			board_array: boardArray,
@@ -14,8 +12,6 @@ defmodule Memory.Game do
 	end
 
 	def client_view(game) do
-		IO.puts "client_view"
-		IO.inspect game
 		#this is definitely too much work
 		click_count = game.click_count
 		completed = get_completed(game.board_array, [], 0)
@@ -41,7 +37,7 @@ defmodule Memory.Game do
 		#add it to guesses 
 		if Enum.count(guesses) == 0 do
 			tile = Enum.at(board, letter)
-			guess = %{id: letter, letter: String.first(tile.letter)}
+			guess = %{id: letter, letter: tile.letter}
 			new_guesses = [guess | guesses]
 			new_tile = %{letter: tile.letter, completed: false, hidden: false}
 			new_board = List.replace_at(board, letter, new_tile)
@@ -50,18 +46,10 @@ defmodule Memory.Game do
 		#if there IS a guess:
 		if Enum.count(guesses) == 1 do
 			tile1 = Enum.at(board, letter) #tile1 is the new guess
-			IO.puts "problem"
 			tile2_id = Enum.at(guesses, 0).id
 			tile2 = Enum.at(board, tile2_id) #tile2 is the old guess, comes as {id: letter}
-			IO.inspect tile1
-			IO.inspect tile2	
-			#if the guess is correct
-			IO.puts "pls"
-			IO.inspect tile1
-			IO.inspect tile2
-			if String.first(tile1.letter) == String.first(tile2.letter) do
-				IO.puts "TRUTH"
-				guess = %{id: letter, letter: String.first(tile1.letter)}
+			if tile1.letter == tile2.letter do
+				guess = %{id: letter, letter: tile1.letter}
 				new_guesses = []
 				new_tile1 = %{letter: tile1.letter, completed: true, hidden: false}
 				new_tile2 = %{letter: tile2.letter, completed: true, hidden: false}
@@ -69,8 +57,7 @@ defmodule Memory.Game do
 				new_board = List.replace_at(board, letter, new_tile1)
 				|> List.replace_at(tile2_id, new_tile2)
 			else
-				IO.puts "...so this is wrong too?..."
-				guess = %{id: letter, letter: String.first(tile1.letter)}
+				guess = %{id: letter, letter: tile1.letter}
 				new_guesses = [guess | guesses]
 				new_tile1 = %{letter: tile1.letter, completed: false, hidden: false}
 				new_tile2 = %{letter: tile2.letter, completed: false, hidden: false}

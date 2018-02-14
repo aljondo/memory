@@ -2,6 +2,6 @@
   <div class="col">
     <h1 id="index-page">Join a Game</h1>
     <input type="text" id="game-input"><br>
-    <p><a href="/game/demo">Join</a></p>
+   	<a id="game-link"><button>Join</button></a>
   </div>
 </div>
